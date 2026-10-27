@@ -1,0 +1,24 @@
+name: Build LensCraft
+
+# Builds the WinUI app on a real Windows machine, so no local install is needed.
+# Runs on every push to the Phase 2 branch and can be started by hand from the Actions tab.
+on:
+  push:
+    branches: [claude/lenscraft-phase-2-build-q8f29i]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore packages
+        run: dotnet restore LensCraft/LensCraft.csproj -p:Platform=x64
+
+      - name: Build (x64, Debug)
+        run: dotnet build LensCraft/LensCraft.csproj -p:Platform=x64 --no-restore
