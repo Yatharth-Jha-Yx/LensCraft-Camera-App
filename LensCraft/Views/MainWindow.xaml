@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="LensCraft.Views.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:views="using:LensCraft.Views"
+    Title="LensCraft">
+
+    <!-- Spec §3: window backdrop is Mica Alt. It shows while no camera is live. -->
+    <Window.SystemBackdrop>
+        <MicaBackdrop Kind="BaseAlt" />
+    </Window.SystemBackdrop>
+
+    <Grid x:Name="RootGrid">
+
+        <!-- Layer 0: live preview, edge to edge, black bars when aspect ratios differ (spec §3). -->
+        <Grid x:Name="PreviewHost"
+              Background="Black"
+              Visibility="{x:Bind ViewModel.IsCameraReady, Mode=OneWay}">
+            <MediaPlayerElement x:Name="PreviewElement"
+                                AreTransportControlsEnabled="False"
+                                ManipulationMode="None"
+                                Stretch="Uniform"
+                                RenderTransformOrigin="0.5,0.5">
+                <MediaPlayerElement.RenderTransform>
+                    <!-- Spec §4 mirror toggle: ScaleX = -1 on the preview only. Saved photos are handled separately. -->
+                    <ScaleTransform ScaleX="{x:Bind ViewModel.PreviewScaleX, Mode=OneWay}" />
+                </MediaPlayerElement.RenderTransform>
+            </MediaPlayerElement>
+        </Grid>
+
+        <!-- Waiting / no-camera state -->
+        <StackPanel HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Spacing="12"
+                    Visibility="{x:Bind ViewModel.IsEmptyStateVisible, Mode=OneWay}">
+            <FontIcon HorizontalAlignment="Center"
+                      FontSize="40"
+                      Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                      Glyph="&#xE722;" />
+            <TextBlock MaxWidth="360"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                       Style="{StaticResource BodyTextBlockStyle}"
+                       Text="{x:Bind ViewModel.EmptyStateText, Mode=OneWay}"
+                       TextAlignment="Center"
+                       TextWrapping="Wrap" />
+        </StackPanel>
+
+        <!-- Drag region: the preview runs under the title bar, so this strip lets the window be moved. -->
+        <Grid x:Name="AppTitleBar"
+              Height="48"
+              VerticalAlignment="Top"
+              Background="Transparent" />
+
+        <!-- Error banner (spec §4 error baseline) -->
+        <InfoBar MaxWidth="520"
+                 Margin="16,56,16,0"
+                 HorizontalAlignment="Center"
+                 VerticalAlignment="Top"
+                 IsOpen="{x:Bind ViewModel.IsBannerOpen, Mode=TwoWay}"
+                 Message="{x:Bind ViewModel.BannerMessage, Mode=OneWay}"
+                 Severity="{x:Bind ViewModel.BannerSeverity, Mode=OneWay}"
+                 Title="{x:Bind ViewModel.BannerTitle, Mode=OneWay}">
+            <InfoBar.ActionButton>
+                <Button Command="{x:Bind ViewModel.BannerActionCommand}"
+                        Content="{x:Bind ViewModel.BannerActionText, Mode=OneWay}"
+                        Visibility="{x:Bind ViewModel.IsBannerActionVisible, Mode=OneWay}" />
+            </InfoBar.ActionButton>
+        </InfoBar>
+
+        <!-- Floating layers (spec §3 component tree). FilterStrip arrives in Phase 3. -->
+        <views:TopControlCluster Margin="0,56,16,0"
+                                 HorizontalAlignment="Right"
+                                 VerticalAlignment="Top"
+                                 ViewModel="{x:Bind ViewModel}" />
+
+        <views:PhotoStrip Margin="16,0,0,0"
+                          HorizontalAlignment="Left"
+                          VerticalAlignment="Bottom"
+                          ViewModel="{x:Bind ViewModel}" />
+
+        <views:CaptureControlsBar Margin="0,0,0,24"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Bottom"
+                                  ViewModel="{x:Bind ViewModel}" />
+
+        <!-- Spec §5: right-edge hardware panel, below the top-right pill so the info toggle stays reachable. -->
+        <views:HardwarePanel Margin="0,112,16,16"
+                             HorizontalAlignment="Right"
+                             VerticalAlignment="Stretch"
+                             IsOpen="{x:Bind ViewModel.IsHardwarePanelOpen, Mode=OneWay}"
+                             ViewModel="{x:Bind ViewModel}" />
+
+        <views:FlashOverlay x:Name="FlashLayer" />
+    </Grid>
+</Window>

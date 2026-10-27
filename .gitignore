@@ -1,0 +1,12 @@
+# Build output
+bin/
+obj/
+AppPackages/
+BundleArtifacts/
+*.msix
+*.appx
+
+# Visual Studio
+.vs/
+*.user
+*.suo

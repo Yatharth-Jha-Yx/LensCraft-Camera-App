@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="LensCraft.Views.TopControlCluster"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:models="using:LensCraft.Models">
+
+    <!-- Spec §3: top-right pill with the info icon and the settings gear. -->
+    <Border Padding="4" Style="{StaticResource FloatingPillStyle}">
+        <StackPanel Orientation="Horizontal" Spacing="4">
+
+            <!-- Spec §3: info icon toggles the hardware panel. -->
+            <ToggleButton AutomationProperties.Name="Camera details"
+                          IsChecked="{x:Bind ViewModel.IsHardwarePanelOpen, Mode=TwoWay}"
+                          Style="{StaticResource PillIconToggleButtonStyle}"
+                          ToolTipService.ToolTip="Camera details">
+                <FontIcon FontSize="18" Glyph="&#xE946;" />
+            </ToggleButton>
+
+            <Button AutomationProperties.Name="Camera settings"
+                    Style="{StaticResource PillIconButtonStyle}"
+                    ToolTipService.ToolTip="Camera settings">
+                <FontIcon FontSize="18" Glyph="&#xE713;" />
+                <Button.Flyout>
+                    <Flyout Placement="BottomEdgeAlignedRight">
+                        <StackPanel Width="320" Spacing="16">
+
+                            <StackPanel Spacing="8">
+                                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Camera" />
+                                <ComboBox HorizontalAlignment="Stretch"
+                                          AutomationProperties.Name="Camera"
+                                          ItemsSource="{x:Bind ViewModel.Cameras, Mode=OneWay}"
+                                          PlaceholderText="No camera found"
+                                          SelectedItem="{x:Bind ViewModel.SelectedCamera, Mode=TwoWay}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="models:CameraDeviceInfo">
+                                            <TextBlock Text="{x:Bind DisplayName}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
+
+                            <StackPanel Spacing="8">
+                                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Resolution and frame rate" />
+                                <TextBlock FontSize="12"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           Text="Only formats this camera reports are listed."
+                                           TextWrapping="Wrap" />
+                                <ListView MaxHeight="280"
+                                          AutomationProperties.Name="Resolution and frame rate"
+                                          IsEnabled="{x:Bind ViewModel.IsFormatPickerEnabled, Mode=OneWay}"
+                                          ItemsSource="{x:Bind ViewModel.Formats, Mode=OneWay}"
+                                          SelectedItem="{x:Bind ViewModel.SelectedFormat, Mode=TwoWay}"
+                                          SelectionMode="Single">
+                                    <ListView.ItemTemplate>
+                                        <DataTemplate x:DataType="models:CameraFormat">
+                                            <Grid Padding="0,4" ColumnSpacing="12">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock FontFamily="Consolas"
+                                                           FontSize="13"
+                                                           Text="{x:Bind ResolutionText}" />
+                                                <TextBlock Grid.Column="1"
+                                                           FontFamily="Consolas"
+                                                           FontSize="13"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                           Text="{x:Bind DetailText}" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListView.ItemTemplate>
+                                </ListView>
+                            </StackPanel>
+
+                            <StackPanel Spacing="4">
+                                <ToggleSwitch Header="Mirror saved photos"
+                                              IsOn="{x:Bind ViewModel.IsSaveMirrored, Mode=TwoWay}" />
+                                <TextBlock FontSize="12"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           Text="Off saves photos the way other people see you."
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Flyout>
+                </Button.Flyout>
+            </Button>
+        </StackPanel>
+    </Border>
+</UserControl>
