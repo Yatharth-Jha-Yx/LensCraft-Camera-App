@@ -14,7 +14,8 @@ using Microsoft.UI.Xaml.Controls;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Media.Playback;
 using Windows.Storage;
-using Windows.System;
+// Alias only Launcher: a full "using Windows.System" makes DispatcherQueue ambiguous with Microsoft.UI.Dispatching (CS0104).
+using Launcher = Windows.System.Launcher;
 
 namespace LensCraft.ViewModels;
 

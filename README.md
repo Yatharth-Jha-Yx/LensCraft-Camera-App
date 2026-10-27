@@ -2,7 +2,7 @@
 
 A lightweight native Windows 11 camera app (WinUI 3, C#, .NET 8). Built phase by phase from the LensCraft design spec.
 
-**Current state: Phase 1 complete and running. Phase 2 (hardware info panel) code complete, awaiting build.**
+**Current state: Phase 1 complete and running. Phase 2 (hardware info panel) C# compile-checked with two fixes (see "Phase 2 build fixes"); awaiting the full Windows build (F5) and the Phase 2 checklist.**
 
 ## Run it (first time with C#)
 
@@ -84,10 +84,17 @@ LensCraft/
 3. **Debug builds open the panel at launch** (spec §7 rule 5, "live debugging surface"). Release builds start with it closed.
 4. **Control values are raw driver units.** Exposure in particular is driver-defined (often a log2-seconds scale such as -6), shown exactly as Windows reports it.
 
+## Phase 2 build fixes
+
+The C# code was compiled with the .NET 8 SDK against Windows App SDK 1.6.240923002 and CommunityToolkit.Mvvm 8.3.2. The XAML compiler only runs on Windows, so XAML was checked by reading, not compiling. Two compile errors were found and fixed:
+
+1. **`ViewModels/MainViewModel.cs`, CS0104 "'DispatcherQueue' is an ambiguous reference".** `using Windows.System;` (needed for `Launcher`) also brings in `Windows.System.DispatcherQueue`, which clashes with `Microsoft.UI.Dispatching.DispatcherQueue`. Fix: replaced it with `using Launcher = Windows.System.Launcher;`.
+2. **`Models/CapturedPhoto.cs`, CS4036 "'IAsyncOperation<...>' does not contain a definition for 'GetAwaiter'".** Awaiting a Windows async call needs the `GetAwaiter` extension in the `System` namespace, and `ImplicitUsings` is off. Fix: added `using System;`.
+
 ## Status paragraph for the Phase 2 chat (historical)
 
 > Phase 1 is complete: WinUI 3 single-project MSIX (Windows App SDK 1.6, CommunityToolkit.Mvvm 8.3), MVVM with CameraService as sole MediaCapture owner. Working: camera enumeration and picker (settings flyout), live preview via MediaFrameSource → MediaSource → MediaPlayerElement (WinUI 3 has no CaptureElement), mirror toggle (preview ON, saved photo OFF, both toggleable), resolution/FPS picker via GetAvailableMediaStreamProperties/SetMediaStreamPropertiesAsync (preview detached during the switch), JPEG capture to Pictures\LensCraft with flash and 6-photo strip, InfoBar error handling for in-use / unplugged / permission-denied with DeviceWatcher reconnect. Not yet built: HardwarePanel (info button is present but disabled), filters, auto-hide, packaging/size tuning. [Add any build fixes or open issues here.]
 
 ## Status paragraph for the Phase 3 chat
 
-> Phases 1 and 2 are complete. Phase 2 added HardwarePanel (320 px right-edge slide-in, toggled by the info icon, open by default in Debug), HardwareInfoService (rows + copy-as-text report), and to CameraService: GetControlReadings (Exposure/WhiteBalance/Brightness/Contrast via VideoDeviceController, Supported-only) and a MediaFrameReader FPS meter (1 s average, runs only while the panel is open, stopped during format switches). Location row is omitted when EnclosureLocation is not reported. Not yet built: filters (FilterStrip, EffectsService, Win2D), countdown, grid, burst, auto-hide, packaging/size tuning. [Add any build fixes or open issues here.]
+> Phases 1 and 2 are complete. Phase 2 added HardwarePanel (320 px right-edge slide-in, toggled by the info icon, open by default in Debug), HardwareInfoService (rows + copy-as-text report), and to CameraService: GetControlReadings (Exposure/WhiteBalance/Brightness/Contrast via VideoDeviceController, Supported-only) and a MediaFrameReader FPS meter (1 s average, runs only while the panel is open, stopped during format switches). Location row is omitted when EnclosureLocation is not reported. Not yet built: filters (FilterStrip, EffectsService, Win2D), countdown, grid, burst, auto-hide, packaging/size tuning. Build fixes: MainViewModel aliases only `Windows.System.Launcher` (a full `using Windows.System` makes DispatcherQueue ambiguous, CS0104); CapturedPhoto needed `using System;` to await WinRT calls (CS4036). [Add any open issues from the Phase 2 checklist here.]
