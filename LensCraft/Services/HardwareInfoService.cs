@@ -55,13 +55,20 @@ public sealed class HardwareInfoService
     /// <summary>Session group: FPS counted on MediaFrameReader.FrameArrived, averaged over 1 s.</summary>
     public IReadOnlyList<HardwareInfoRow> GetSessionRows(double? measuredFps)
     {
-        if (measuredFps is not double fps)
+        var rows = new List<HardwareInfoRow>();
+        if (measuredFps is double fps)
         {
-            return [];
+            string selected = _camera.ActiveFormat is { } format ? $"selected {Number(format.FrameRate)} fps" : string.Empty;
+            rows.Add(new HardwareInfoRow("Measured FPS", $"{fps.ToString("0.0", CultureInfo.InvariantCulture)} fps", selected));
         }
 
-        string selected = _camera.ActiveFormat is { } format ? $"selected {Number(format.FrameRate)} fps" : string.Empty;
-        return [new HardwareInfoRow("Measured FPS", $"{fps.ToString("0.0", CultureInfo.InvariantCulture)} fps", selected)];
+        // Diagnostic: the rate the frame source reports for itself, to compare with Measured FPS.
+        if (_camera.PreviewSourceFrameRate is double driverFps)
+        {
+            rows.Add(new HardwareInfoRow("Driver frame rate", $"{Number(driverFps)} fps"));
+        }
+
+        return rows;
     }
 
     /// <summary>Plain-text copy of the whole panel, for webcam bug reports (spec §5 copy icon).</summary>

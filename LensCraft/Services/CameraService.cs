@@ -74,6 +74,16 @@ public sealed class CameraService : IDisposable
 
     public CameraFormat? ActiveFormat { get; private set; }
 
+    /// <summary>Diagnostic: the frame rate the preview frame source reports for its current format, or null.</summary>
+    public double? PreviewSourceFrameRate
+    {
+        get
+        {
+            MediaRatio? rate = _previewFrameSource?.CurrentFormat?.FrameRate;
+            return rate is { Denominator: > 0 } ? (double)rate.Numerator / rate.Denominator : null;
+        }
+    }
+
     /// <summary>Spec §4: DeviceInformation.FindAllAsync(DeviceClass.VideoCapture).</summary>
     public async Task<IReadOnlyList<CameraDeviceInfo>> FindCamerasAsync()
     {
