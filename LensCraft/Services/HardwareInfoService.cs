@@ -48,9 +48,19 @@ public sealed class HardwareInfoService
 
     /// <summary>Controls group: only controls whose Capabilities.Supported is true.</summary>
     public IReadOnlyList<HardwareInfoRow> GetControlRows()
-        => _camera.GetControlReadings()
+    {
+        List<HardwareInfoRow> rows = _camera.GetControlReadings()
             .Select(reading => new HardwareInfoRow(reading.Name, DescribeValue(reading), DescribeRange(reading)))
             .ToList();
+
+        // Diagnostic: when on, the camera may lower its frame rate in low light.
+        if (_camera.GetExposurePriority() is bool exposurePriority)
+        {
+            rows.Add(new HardwareInfoRow("Exposure priority", exposurePriority ? "on" : "off"));
+        }
+
+        return rows;
+    }
 
     /// <summary>Session group: FPS counted on MediaFrameReader.FrameArrived, averaged over 1 s.</summary>
     public IReadOnlyList<HardwareInfoRow> GetSessionRows(double? measuredFps)

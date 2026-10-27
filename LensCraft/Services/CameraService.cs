@@ -226,6 +226,16 @@ public sealed class CameraService : IDisposable
         return readings;
     }
 
+    /// <summary>
+    /// Diagnostic: whether the camera may lower its frame rate to expose longer in low light
+    /// (VideoDeviceController.ExposurePriorityVideoControl). Null when the camera does not support it.
+    /// </summary>
+    public bool? GetExposurePriority()
+    {
+        ExposurePriorityVideoControl? control = _mediaCapture?.VideoDeviceController.ExposurePriorityVideoControl;
+        return control is { Supported: true } ? control.Enabled : null;
+    }
+
     /// <summary>Turns the live FPS meter on or off. Off saves CPU while the hardware panel is closed.</summary>
     public async Task SetFrameRateMeterEnabledAsync(bool enabled)
     {
@@ -425,7 +435,8 @@ public sealed class CameraService : IDisposable
         try
         {
             MediaFrameReader reader = await _mediaCapture.CreateFrameReaderAsync(_previewFrameSource);
-            reader.AcquisitionMode = MediaFrameReaderAcquisitionMode.Realtime;
+            // Buffered queues every frame, so the meter cannot skip frames the way Realtime mode may.
+            reader.AcquisitionMode = MediaFrameReaderAcquisitionMode.Buffered;
             reader.FrameArrived += OnMeterFrameArrived;
 
             MediaFrameReaderStartStatus status = await reader.StartAsync();
@@ -492,9 +503,10 @@ public sealed class CameraService : IDisposable
     private void OnMeterFrameArrived(MediaFrameReader sender, MediaFrameArrivedEventArgs args)
     {
         // Acquire and release immediately: the meter only counts frames, it never processes pixels.
-        using MediaFrameReference? frame = sender.TryAcquireLatestFrame();
-        if (frame is not null)
+        // Drain the queue so a late event still counts every buffered frame.
+        while (sender.TryAcquireLatestFrame() is { } frame)
         {
+            frame.Dispose();
             Interlocked.Increment(ref _frameCount);
         }
     }
